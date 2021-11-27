@@ -29,3 +29,13 @@ iffmpeg -i input.mp4 -filter_complex \
  [0:a]atrim=start=17,asetpts=PTS-STARTPTS[da]; \
 
  [cv][ca][dv][da]concat=a=1[outv][outa]" -map [outv] -map [outa] output.mp4
+
+
+ ffmpeg -i in.mp4 -filter_complex 
+ [0:v]trim=start=10.0:end=15.0,setpts=PTS-STARTPTS,format=yuv420p[0v];
+ [0:a]atrim=start=10.0:end=15.0,asetpts=PTS-STARTPTS[0a];
+ [0:v]trim=start=65.0:end=70.0,setpts=PTS-STARTPTS,format=yuv420p[1v];
+ [0:a]atrim=start=65.0:end=70.0,asetpts=PTS-STARTPTS[1a];[0v][0a][1v]
+ [1a]concat=n=2:v=1:a=1[outv][outa] -map [outv -map []outa] out.mp4
+
+ https://superuser.com/a/1498811/1158955
