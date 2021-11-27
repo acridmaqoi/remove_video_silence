@@ -85,10 +85,26 @@ def get_video_chunks(output):
 
     return list(zip(chunk_starts, chunk_ends))
 
-def remove_silence(chunks):
 
+def remove_silence(chunks, video):
+    in_file = ffmpeg.input(video)
+    ffmpeg.filter
+    video_chunks = [
+        in_file.filter("trim", start=start, end=end) for (start, end) in chunks
+    ]
+    audio_chunks = [
+        in_file.filter("atrim", start=start, end=end) for (start, end) in chunks
+    ]
+
+    output = ffmpeg.concat(a1, v1, v=1, a=1).output(
+        f"test-crop.mp4", vcodec="h264_nvenc"
+    )
+    run_ffmpeg_cmd(output.compile())
 
 
 if __name__ == "__main__":
-    silence_output = execute_silent_detect("input.mp4")
+    video = "input.mp4"
+    silence_output = execute_silent_detect(video)
     chunks = get_video_chunks(silence_output)
+
+    remove_silence(chunks, video)
