@@ -1,4 +1,6 @@
 ffmpeg -i input.mp4 -af silencedetect=n=-50dB:d=5 -f null -
+d = sensitivity
+https://ffmpeg.org/ffmpeg-filters.html#silencedetect
 
 
 iffmpeg -i input.mp4 -filter_complex \
