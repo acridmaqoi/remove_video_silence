@@ -87,32 +87,30 @@ def get_video_chunks(output):
 
 
 def remove_silence(chunks, video):
-    chunks = [(5, 10)]
-    video_input = ffmpeg.input("input.mp4")
-    video_chunks = [
-        video_input.video.filter("trim", start=start, end=end).filter(
+    video_input = ffmpeg.input(video)
+
+    chunks = [(100, 200), (1000, 3000)]
+
+    video_audio_chunks = []
+    stream = ffmpeg
+
+    for (start, end) in chunks:
+        video_chunk = video_input.video.filter("trim", start=start, end=end).filter(
             "setpts", "PTS-STARTPTS"
         )
-        for (start, end) in chunks
-    ]
-
-    audio_chunks = [
-        video_input.audio.filter("atrim", start=start, end=end).filter(
+        audio_chunk = video_input.audio.filter("atrim", start=start, end=end).filter(
             "asetpts", "PTS-STARTPTS"
         )
-        for (start, end) in chunks
-    ]
+        video_audio_chunk = ffmpeg.concat(video_chunk, audio_chunk, v=1, a=1)
+        stream = video_audio_chunk
 
-    run_ffmpeg_cmd(
-        ffmpeg.concat(*video_chunks, *audio_chunks, v=len(chunks), a=len(chunks))
-        .output("out.mp4")
-        .compile()
-    )
+    command = ffmpeg.output(stream, "out.mp4", vcodec="h264_nvenc").compile()
+    run_ffmpeg_cmd(command)
 
 
 if __name__ == "__main__":
-    video = "input.mp4"
-    silence_output = execute_silent_detect(video)
-    chunks = get_video_chunks(silence_output)
+    video = "input2.mp4"
+    # silence_output = execute_silent_detect(video)
+    # chunks = get_video_chunks(None)
 
-    remove_silence(chunks, video)
+    remove_silence(None, video)
