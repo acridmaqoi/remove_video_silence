@@ -1,7 +1,10 @@
+import os
 import sys
 import logging
 import re
 import subprocess
+import pathlib
+import glob
 
 import ffmpeg
 
@@ -86,31 +89,26 @@ def get_video_chunks(output):
     return list(zip(chunk_starts, chunk_ends))
 
 
-def remove_silence(chunks, video):
-    video_input = ffmpeg.input(video)
+def remove_silence(chunks, video_name):
+    for i, (start, end) in enumerate(chunks):
+        filename = f"{i}.mp4"
+        logger.info(f"splitting from {start} to {end}")
 
-    chunks = [(100, 200), (1000, 3000)]
+        ffmpeg.input(video_name, ss=start).output(
+            f"tmp/{filename}",
+            t=end,
+            vcodec="h264_nvenc",
+            preset="fast",
+        ).run(quiet=False)
 
-    video_audio_chunks = []
-    stream = ffmpeg
-
-    for (start, end) in chunks:
-        video_chunk = video_input.video.filter("trim", start=start, end=end).filter(
-            "setpts", "PTS-STARTPTS"
-        )
-        audio_chunk = video_input.audio.filter("atrim", start=start, end=end).filter(
-            "asetpts", "PTS-STARTPTS"
-        )
-        video_audio_chunk = ffmpeg.concat(video_chunk, audio_chunk, v=1, a=1)
-        stream = video_audio_chunk
-
-    command = ffmpeg.output(stream, "out.mp4", vcodec="h264_nvenc").compile()
-    run_ffmpeg_cmd(command)
+    logger.info("finalizing...")
+    chunk_files = [ffmpeg.input(file) for file in glob.glob("tmp/*.mp4")]
+    ffmpeg.output(*chunk_files, "result.mp4", codec="copy", acodec="copy").run()
 
 
 if __name__ == "__main__":
-    video = "input2.mp4"
-    # silence_output = execute_silent_detect(video)
-    # chunks = get_video_chunks(None)
+    video_name = "input2.mp4"
+    silence_output = execute_silent_detect(video_name)
+    chunks = get_video_chunks(silence_output)
 
-    remove_silence(None, video)
+    remove_silence(chunks, video_name)
