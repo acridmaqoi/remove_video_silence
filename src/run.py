@@ -5,15 +5,13 @@ import re
 import subprocess
 import pathlib
 import glob
+import datetime
 
 import ffmpeg
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
-
-
-in_file = ffmpeg.input("input.mp4")
 
 
 def run_ffmpeg_cmd(cmd_line, *args, **kwargs):
@@ -36,7 +34,7 @@ def execute_silent_detect(file):
     p = run_ffmpeg_cmd(
         (
             ffmpeg.input(file)
-            .filter("silencedetect", n="-50dB", d="5")
+            .filter("silencedetect", n="-50dB", d="0.5")
             .output("-", format="null")
             .compile()
             + ["-nostats"]
@@ -90,24 +88,30 @@ def get_video_chunks(output):
 
 
 def remove_silence(chunks, video_name):
-    for i, (start, end) in enumerate(chunks):
-        filename = f"{i}.mp4"
-        logger.info(f"splitting from {start} to {end}")
+    for i, (start_secs, end_secs) in enumerate(chunks):
+        start_fmt = str(datetime.timedelta(seconds=start_secs))
+        end_fmt = str(datetime.timedelta(seconds=end_secs))
+        logger.info(f"splitting from {start_fmt} to {end_fmt}")
 
-        ffmpeg.input(video_name, ss=start).output(
+        duration = end_secs - start_secs
+        filename = f"{i}.mp4"
+
+        ffmpeg.input(video_name, ss=start_secs, t=duration).output(
             f"tmp/{filename}",
-            t=end,
+            max_muxing_queue_size=9999,
             vcodec="h264_nvenc",
             preset="fast",
-        ).run(quiet=False)
+        ).run(quiet=True)
 
     logger.info("finalizing...")
     chunk_files = [ffmpeg.input(file) for file in glob.glob("tmp/*.mp4")]
-    ffmpeg.output(*chunk_files, "result.mp4", codec="copy", acodec="copy").run()
+    ffmpeg.output(*chunk_files, "result.mp4", codec="copy", acodec="copy").run(
+        quiet=False
+    )
 
 
 if __name__ == "__main__":
-    video_name = "input2.mp4"
+    video_name = "input3.mp4"
     silence_output = execute_silent_detect(video_name)
     chunks = get_video_chunks(silence_output)
 
