@@ -4,16 +4,9 @@ import re
 import subprocess
 import datetime
 
-import ffmpeg
-
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__file__)
-logger.setLevel(logging.DEBUG)
-
-
-def run_ffmpeg_cmd(cmd_line, *args, **kwargs):
-    logger.debug("Running command: {}".format(subprocess.list2cmdline(cmd_line)))
-    return subprocess.Popen(cmd_line, *args, **kwargs)
+logger.setLevel(logging.INFO)
 
 
 SILENCE_START_RE = re.compile(" silence_start: (?P<start>[0-9]+(\.?[0-9]*))$")
@@ -23,19 +16,21 @@ TOTAL_DURATION_RE = re.compile(
 )
 
 
-def get_video_silence(cls, file):
-    return cls.__parse_silence_output(cls.__execute_silent_detect(file))
-
-
 def execute_silent_detect(file):
-    p = run_ffmpeg_cmd(
-        (
-            ffmpeg.input(file)
-            .filter("silencedetect", n="-50dB", d="0.5")
-            .output("-", format="null")
-            .compile()
-            + ["-nostats"]
-        ),
+    p = subprocess.Popen(
+        [
+            "ffmpeg",
+            "-i",
+            "input3.mp4",
+            "-filter_complex",
+            "[0]silencedetect=d=0.5:n=-50dB[s0]",
+            "-map",
+            "[s0]",
+            "-f",
+            "null",
+            "-",
+            "-nostats",
+        ],
         stderr=subprocess.PIPE,
     )
     output = p.communicate()[1].decode("utf-8")
