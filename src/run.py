@@ -1,10 +1,7 @@
-import os
 import sys
 import logging
 import re
 import subprocess
-import pathlib
-import glob
 import datetime
 
 import ffmpeg
@@ -89,30 +86,52 @@ def get_video_chunks(output):
 
 def remove_silence(chunks, video_name):
     for i, (start_secs, end_secs) in enumerate(chunks):
-        # start_fmt = str(datetime.timedelta(seconds=start_secs))
-        # end_fmt = str(datetime.timedelta(seconds=end_secs))
-        # logger.info(f"splitting from {start_fmt} to {end_fmt}")
+        start_fmt = str(datetime.timedelta(seconds=start_secs)).split(".")[0]
+        end_fmt = str(datetime.timedelta(seconds=end_secs)).split(".")[0]
+        logger.info(f"splitting from {start_fmt} to {end_fmt}")
 
-        # duration = end_secs - start_secs
+        duration = end_secs - start_secs
         filename = f"{i}.mp4"
 
-        # ffmpeg.input(video_name, ss=start_secs, t=duration).output(
-        #    f"tmp/{filename}",
-        #    max_muxing_queue_size=9999,
-        #    vcodec="h264_nvenc",
-        #    preset="fast",
-        # ).run(quiet=True)
+        out_path = f"tmp/{filename}"
+
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-ss",
+                str(start_secs),
+                "-i",
+                video_name,
+                "-y",
+                "-filter_complex",
+                "[0:a:0]amix=inputs=1[a];[a]aresample=async=1000[outa]",
+                "-t",
+                str(duration),
+                "-crf",
+                "15",
+                "-ignore_unknown",
+                "-max_muxing_queue_size",
+                "9999",
+                "-c:v",
+                "h264_nvenc",
+                "-preset",
+                "fast",
+                "-map",
+                "0:v:0",
+                "-map",
+                "[outa]",
+                out_path,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
         with open("tmp/input.txt", "a") as f:
             f.write(f"file '{filename}'\n")
 
     logger.info("finalizing...")
-    # chunk_files = [ffmpeg.input(file) for file in glob.glob("tmp2/*.mp4")]
-    # ffmpeg.output(*chunk_files, "result.mp4", codec="copy", acodec="copy").run(
-    #    quiet=False
-    # )
 
-    run_ffmpeg_cmd(
+    subprocess.run(
         [
             "ffmpeg",
             "-f",
@@ -125,7 +144,9 @@ def remove_silence(chunks, video_name):
             "-c",
             "copy",
             "result.mp4",
-        ]
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
 
 
