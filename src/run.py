@@ -1,8 +1,11 @@
+import os
 import sys
 import logging
 import re
 import subprocess
 import datetime
+import glob
+import shutil
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__file__)
@@ -80,6 +83,11 @@ def get_video_chunks(output):
 
 
 def remove_silence(chunks, video_name):
+    # rm leftover files
+    for f in glob.glob("tmp/*"):
+        os.remove(f)
+    os.mkdir("tmp")
+
     for i, (start_secs, end_secs) in enumerate(chunks):
         start_fmt = str(datetime.timedelta(seconds=start_secs)).split(".")[0]
         end_fmt = str(datetime.timedelta(seconds=end_secs)).split(".")[0]
@@ -144,10 +152,15 @@ def remove_silence(chunks, video_name):
         stderr=subprocess.DEVNULL,
     )
 
+    shutil.rmtree("tmp")
+
+
+def remove_video_silence(video: str):
+    silence_output = execute_silent_detect(video)
+    chunks = get_video_chunks(silence_output)
+    remove_silence(chunks, video)
+
 
 if __name__ == "__main__":
-    video_name = "input3.mp4"
-    silence_output = execute_silent_detect(video_name)
-    chunks = get_video_chunks(silence_output)
-
-    remove_silence(chunks, video_name)
+    video = sys.argv[1]
+    remove_video_silence(video)
