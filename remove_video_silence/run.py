@@ -86,7 +86,11 @@ def remove_silence(chunks, video_name):
     # rm leftover files
     for f in glob.glob("tmp/*"):
         os.remove(f)
-    os.mkdir("tmp")
+
+    try:
+        os.mkdir("tmp")
+    except FileExistsError:
+        pass
 
     for i, (start_secs, end_secs) in enumerate(chunks):
         start_fmt = str(datetime.timedelta(seconds=start_secs)).split(".")[0]
