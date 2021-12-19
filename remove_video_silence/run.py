@@ -24,7 +24,7 @@ def execute_silent_detect(file):
         [
             "ffmpeg",
             "-i",
-            "input3.mp4",
+            file,
             "-filter_complex",
             "[0]silencedetect=d=0.5:n=-50dB[s0]",
             "-map",
