@@ -20,7 +20,7 @@ TOTAL_DURATION_RE = re.compile(
 
 
 def execute_silent_detect(file):
-    logger.info("performing silence detection")
+    logger.info("performing silence detection...")
     p = subprocess.Popen(
         [
             "ffmpeg",
