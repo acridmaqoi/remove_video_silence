@@ -82,7 +82,7 @@ def get_video_chunks(output):
     return list(zip(chunk_starts, chunk_ends))
 
 
-def remove_silence(chunks, video_name):
+def remove_silence(chunks, source_path: str, output_path: str):
     # rm leftover files
     for f in glob.glob("tmp/*"):
         os.remove(f)
@@ -98,9 +98,9 @@ def remove_silence(chunks, video_name):
         logger.info(f"splitting from {start_fmt} to {end_fmt}")
 
         duration = end_secs - start_secs
-        filename = f"{i}.mp4"
+        segment_name = f"{i}.mp4"
 
-        out_path = f"tmp/{filename}"
+        segment_out_path = f"tmp/{segment_name}"
 
         subprocess.run(
             [
@@ -108,7 +108,7 @@ def remove_silence(chunks, video_name):
                 "-ss",
                 str(start_secs),
                 "-i",
-                video_name,
+                source_path,
                 "-y",
                 "-filter_complex",
                 "[0:a:0]amix=inputs=1[a];[a]aresample=async=1000[outa]",
@@ -127,14 +127,14 @@ def remove_silence(chunks, video_name):
                 "0:v:0",
                 "-map",
                 "[outa]",
-                out_path,
+                segment_out_path,
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
 
         with open("tmp/input.txt", "a") as f:
-            f.write(f"file '{filename}'\n")
+            f.write(f"file '{segment_name}'\n")
 
     logger.info("finalizing...")
 
@@ -150,7 +150,7 @@ def remove_silence(chunks, video_name):
             "-y",
             "-c",
             "copy",
-            "result.mp4",
+            output_path,
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -159,12 +159,20 @@ def remove_silence(chunks, video_name):
     shutil.rmtree("tmp")
 
 
-def remove_video_silence(video: str):
-    silence_output = execute_silent_detect(video)
+def remove_video_silence(source_path: str, output_path: str = None):
+    if output_path is None:
+        output_path = f"{source_path}_filtered"
+
+    silence_output = execute_silent_detect(source_path)
     chunks = get_video_chunks(silence_output)
-    remove_silence(chunks, video)
+
+    remove_silence(chunks, source_path)
+
+    return output_path
 
 
 if __name__ == "__main__":
-    video = sys.argv[1]
-    remove_video_silence(video)
+    source_path = sys.argv[1]
+    output_path = sys.argv[2]
+
+    remove_video_silence(source_path, output_path)
