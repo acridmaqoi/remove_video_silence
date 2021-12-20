@@ -48,7 +48,7 @@ def execute_silent_detect(file):
 
 
 def get_video_chunks(output):
-    start_time = 0  # TODO
+    start_time = 0
     end_time = None
 
     lines = output.splitlines()
