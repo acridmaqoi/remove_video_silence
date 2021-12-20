@@ -166,7 +166,7 @@ def remove_video_silence(source_path: str, output_path: str = None):
     silence_output = execute_silent_detect(source_path)
     chunks = get_video_chunks(silence_output)
 
-    remove_silence(chunks, source_path)
+    remove_silence(chunks, source_path, output_path)
 
     return output_path
 
