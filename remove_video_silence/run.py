@@ -110,7 +110,6 @@ def remove_silence(chunks, source_path: str, output_path: str):
                 str(start_secs),
                 "-i",
                 source_path,
-                "-y",
                 "-filter_complex",
                 "[0:a:0]amix=inputs=1[a];[a]aresample=async=1000[outa]",
                 "-t",
