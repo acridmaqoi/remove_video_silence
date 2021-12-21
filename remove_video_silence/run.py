@@ -27,7 +27,7 @@ def execute_silent_detect(file):
             "-i",
             file,
             "-filter_complex",
-            "[0]silencedetect=d=0.5:n=-50dB[s0]",
+            "[0]silencedetect=d=0.5:n=-30dB[s0]",
             "-map",
             "[s0]",
             "-f",
@@ -60,12 +60,12 @@ def get_video_chunks(output):
         silence_end_match = SILENCE_END_RE.search(line)
         total_duration_match = TOTAL_DURATION_RE.search(line)
         if silence_start_match:
-            chunk_ends.append(float(silence_start_match.group("start")))
+            chunk_ends.append(float(silence_start_match.group("start")) + 0.1)
             if len(chunk_starts) == 0:
                 # Started with non-silence.
                 chunk_starts.append(start_time or 0.0)
         elif silence_end_match:
-            chunk_starts.append(float(silence_end_match.group("end")))
+            chunk_starts.append(float(silence_end_match.group("end")) - 0.1)
         elif total_duration_match:
             hours = int(total_duration_match.group("hours"))
             minutes = int(total_duration_match.group("minutes"))
