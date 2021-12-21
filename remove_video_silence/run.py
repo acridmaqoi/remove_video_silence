@@ -96,7 +96,7 @@ def remove_silence(chunks, source_path: str, output_path: str):
     for i, (start_secs, end_secs) in enumerate(chunks):
         start_fmt = str(datetime.timedelta(seconds=start_secs)).split(".")[0]
         end_fmt = str(datetime.timedelta(seconds=end_secs)).split(".")[0]
-        logger.info(f"splitting from {start_fmt} to {end_fmt}")
+        print(f"splitting from {start_fmt} to {end_fmt}", end="\r")
 
         duration = end_secs - start_secs
         segment_name = f"{i}.mp4"
