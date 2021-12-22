@@ -136,6 +136,7 @@ def remove_silence(chunks, source_path: str, output_path: str):
         with open("tmp/input.txt", "a") as f:
             f.write(f"file '{segment_name}'\n")
 
+    print()
     logger.info("finalizing...")
 
     subprocess.run(
