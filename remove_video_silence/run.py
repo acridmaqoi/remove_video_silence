@@ -27,7 +27,7 @@ def execute_silent_detect(file):
             "-i",
             file,
             "-filter_complex",
-            "[0]silencedetect=d=0.5:n=-45dB[s0]",
+            "[0]silencedetect=d=0.5:n=-50dB[s0]",
             "-map",
             "[s0]",
             "-f",
